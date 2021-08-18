@@ -21,7 +21,7 @@
     <PackageReference Include="PublicApiGenerator" Version="10.2.0" />
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
     <PackageReference Include="Microsoft.Reactive.Testing" Version="5.0.0" />
-    <PackageReference Include="ReactiveUI.Testing" Version="14.3.1" />
+    <PackageReference Include="ReactiveUI.Testing" Version="14.3.10" />
   </ItemGroup>
 
   <ItemGroup>

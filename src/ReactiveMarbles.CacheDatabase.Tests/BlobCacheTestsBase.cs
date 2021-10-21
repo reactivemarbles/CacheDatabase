@@ -10,23 +10,16 @@ using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading.Tasks;
-
 using DynamicData;
-
 using FluentAssertions;
-
 using Microsoft.Reactive.Testing;
-
-using ReactiveMarbles.CacheData.SystemTextJson;
 using ReactiveMarbles.CacheDatabase.Core;
 using ReactiveMarbles.CacheDatabase.NewtonsoftJson;
+using ReactiveMarbles.CacheDatabase.SystemTextJson;
 using ReactiveMarbles.CacheDatabase.Tests.Helpers;
 using ReactiveMarbles.CacheDatabase.Tests.Mocks;
-
 using ReactiveUI.Testing;
-
 using SQLite;
-
 using Xunit;
 
 namespace ReactiveMarbles.CacheDatabase.Tests
@@ -405,14 +398,12 @@ namespace ReactiveMarbles.CacheDatabase.Tests
             });
 
             using (Utility.WithEmptyDirectory(out var path))
+            await using (var fixture = CreateBlobCache(path))
             {
-                await using (var fixture = CreateBlobCache(path))
-                {
-                    var result = await fixture.GetOrFetchObject("Test", fetcher)
-                        .Catch(Observable.Return(new Tuple<string, string>("one", "two"))).FirstAsync();
-                    Assert.Equal("one", result.Item1);
-                    Assert.Equal("two", result.Item2);
-                }
+                var result = await fixture.GetOrFetchObject("Test", fetcher)
+                    .Catch(Observable.Return(new Tuple<string, string>("one", "two"))).FirstAsync();
+                Assert.Equal("one", result.Item1);
+                Assert.Equal("two", result.Item2);
             }
         }
 
@@ -579,12 +570,12 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                     // GetAndFetchLatest skips cache invalidation/storage due to cache validation predicate.
                     await fixture.InsertObject(key, items);
 
-                    await fixture.GetAndFetchLatest(key, fetcher, cacheValidationPredicate: i => i is not null && i.Any()).LastAsync();
+                    await fixture.GetAndFetchLatest(key, fetcher, cacheValidationPredicate: i => i is not null && i.Count > 0).LastAsync();
 
                     var result = await fixture.GetObject<List<int>>(key).FirstAsync();
 
                     Assert.NotNull(result);
-                    Assert.True(result.Any(), "The returned list is empty.");
+                    Assert.True(result.Count > 0, "The returned list is empty.");
                     Assert.Equal(items, result);
                 }
             }
@@ -1169,30 +1160,28 @@ namespace ReactiveMarbles.CacheDatabase.Tests
         public async Task VacuumPurgeEntriesThatAreExpired()
         {
             using (Utility.WithEmptyDirectory(out var path))
+            await using (var fixture = CreateBlobCache(path))
             {
-                await using (var fixture = CreateBlobCache(path))
+                var inThePast = CoreRegistrations.TaskpoolScheduler.Now - TimeSpan.FromDays(1.0);
+                var inTheFuture = CoreRegistrations.TaskpoolScheduler.Now + TimeSpan.FromDays(1.0);
+
+                await fixture.Insert("Foo", new byte[] { 1, 2, 3 }, inThePast).FirstAsync();
+                await fixture.Insert("Bar", new byte[] { 4, 5, 6 }, inThePast).FirstAsync();
+                await fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).FirstAsync();
+                await fixture.Insert("Baz", new byte[] { 7, 8, 9 }, inTheFuture).FirstAsync();
+
+                try
                 {
-                    var inThePast = CoreRegistrations.TaskpoolScheduler.Now - TimeSpan.FromDays(1.0);
-                    var inTheFuture = CoreRegistrations.TaskpoolScheduler.Now + TimeSpan.FromDays(1.0);
-
-                    await fixture.Insert("Foo", new byte[] { 1, 2, 3 }, inThePast).FirstAsync();
-                    await fixture.Insert("Bar", new byte[] { 4, 5, 6 }, inThePast).FirstAsync();
-                    await fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).FirstAsync();
-                    await fixture.Insert("Baz", new byte[] { 7, 8, 9 }, inTheFuture).FirstAsync();
-
-                    try
-                    {
-                        await fixture.Vacuum().FirstAsync();
-                    }
-                    catch (NotImplementedException)
-                    {
-                        // NB: The old and busted cache will never have this,
-                        // just make the test pass
-                    }
-
-                    await Assert.ThrowsAsync<KeyNotFoundException>(() => fixture.Get("Foo").FirstAsync().ToTask()).ConfigureAwait(false);
-                    await Assert.ThrowsAsync<KeyNotFoundException>(() => fixture.Get("Bar").FirstAsync().ToTask()).ConfigureAwait(false);
+                    await fixture.Vacuum().FirstAsync();
                 }
+                catch (NotImplementedException)
+                {
+                    // NB: The old and busted cache will never have this,
+                    // just make the test pass
+                }
+
+                await Assert.ThrowsAsync<KeyNotFoundException>(() => fixture.Get("Foo").FirstAsync().ToTask()).ConfigureAwait(false);
+                await Assert.ThrowsAsync<KeyNotFoundException>(() => fixture.Get("Bar").FirstAsync().ToTask()).ConfigureAwait(false);
             }
         }
 

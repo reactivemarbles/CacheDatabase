@@ -482,7 +482,7 @@ namespace ReactiveMarbles.CacheDatabase.Sqlite3
         {
             if (keyValuePairs is null)
             {
-                Observable.Throw<Unit>(new ArgumentNullException(nameof(keyValuePairs)));
+                return Observable.Throw<Unit>(new ArgumentNullException(nameof(keyValuePairs)));
             }
 
             if (_disposed)

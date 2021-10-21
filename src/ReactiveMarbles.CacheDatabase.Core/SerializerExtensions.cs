@@ -70,7 +70,7 @@ namespace ReactiveMarbles.CacheDatabase.Core
             return blobCache
                 .Get(keys, typeof(T))
                 .Select(x => (x.Key, Data: Serializer.Deserialize<T>(x.Value)))
-                .Where(x => x.Data != null).Select(x => new KeyValuePair<string, T>(x.Key, x.Data!));
+                .Where(x => x.Data is not null).Select(x => new KeyValuePair<string, T>(x.Key, x.Data!));
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace ReactiveMarbles.CacheDatabase.Core
             return blobCache
                 .GetAll(typeof(T))
                 .Select(x => Serializer.Deserialize<T>(x.Value))
-                .Where(x => x != null)
+                .Where(x => x is not null)
                 .Select(x => x!);
         }
 
@@ -217,6 +217,11 @@ namespace ReactiveMarbles.CacheDatabase.Core
         /// <returns>A Future result representing the completion of the insert.</returns>
         public static IObservable<Unit> InsertAllObjects<T>(this IBlobCache blobCache, IEnumerable<KeyValuePair<string, T>> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.Insert(keyValuePairs.Select(x => new KeyValuePair<string, byte[]>(x.Key, Serializer.Serialize<T>(x.Value))), absoluteExpiration);
         }
 

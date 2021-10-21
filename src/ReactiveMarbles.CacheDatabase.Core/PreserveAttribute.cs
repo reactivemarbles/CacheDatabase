@@ -9,7 +9,7 @@ using System.Text;
 namespace ReactiveMarbles.CacheDatabase.Core
 {
     [AttributeUsage(AttributeTargets.All)]
-    internal class PreserveAttribute : Attribute
+    internal sealed class PreserveAttribute : Attribute
     {
         public PreserveAttribute(bool allMembers, bool conditional)
         {

@@ -8,7 +8,7 @@ using System.Text.Json.Serialization;
 
 using ReactiveMarbles.CacheDatabase.Core;
 
-namespace ReactiveMarbles.CacheData.SystemTextJson
+namespace ReactiveMarbles.CacheDatabase.SystemTextJson
 {
     /// <summary>
     /// A converter using System.Text.Json.

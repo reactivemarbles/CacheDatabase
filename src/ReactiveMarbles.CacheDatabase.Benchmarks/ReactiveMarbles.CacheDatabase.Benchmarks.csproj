@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net5.0</TargetFrameworks>
+    <NoPack>true</NoPack>
   </PropertyGroup>
 
   <ItemGroup>

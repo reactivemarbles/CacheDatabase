@@ -19,7 +19,7 @@
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="6.1.0" />
     <PackageReference Include="Microsoft.Reactive.Testing" Version="5.0.0" />
-    <PackageReference Include="ReactiveUI.Testing" Version="16.2.6" />
+    <PackageReference Include="ReactiveUI.Testing" Version="17.1.6" />
   </ItemGroup>
 
   <ItemGroup>

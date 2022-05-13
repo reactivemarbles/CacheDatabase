@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019-2021 ReactiveUI Association Incorporated. All rights reserved.
+﻿// Copyright (c) 2019-2022 ReactiveUI Association Incorporated. All rights reserved.
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -47,7 +47,6 @@ namespace ReactiveMarbles.CacheDatabase.Sqlite3
         /// <summary>
         /// Gets or sets the value of the entry.
         /// </summary>
-        [SuppressMessage("FxCop.Style", "CA1819: Properties should not return arrays", Justification = "Legacy reasons.")]
         public byte[]? Value { get; set; } = Array.Empty<byte>();
     }
 }

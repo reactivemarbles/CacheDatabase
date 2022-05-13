@@ -15,6 +15,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
     public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     {
         /// <inheritdoc/>
-        protected override IBlobCache CreateBlobCache(string path) => new EncryptedSqliteBlobCache(Path.Combine(path, "test.db"), "test1234");
+        protected override IBlobCache CreateBlobCache(string path) =>
+            new EncryptedSqliteBlobCache(Path.Combine(path, "test.db"), "test1234");
     }
 }

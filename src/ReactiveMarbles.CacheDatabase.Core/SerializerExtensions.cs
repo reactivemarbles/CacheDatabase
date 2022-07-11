@@ -336,7 +336,7 @@ namespace ReactiveMarbles.CacheDatabase.Core
                                 ? Observable.Return(default(T))
                                 : blobCache.InvalidateObject<T>(key).Select(__ => x))
                         .SelectMany(x =>
-                            cacheValidationPredicate is not null && !cacheValidationPredicate(x)
+                            cacheValidationPredicate is not null && !cacheValidationPredicate(x!)
                                 ? Observable.Return(default(T))
                                 : blobCache.InsertObject(key, x, absoluteExpiration).Select(__ => x));
                 });
@@ -356,21 +356,26 @@ namespace ReactiveMarbles.CacheDatabase.Core
         }
 
         /// <summary>
+        /// <para>
         /// This method attempts to returned a cached value, while
         /// simultaneously calling a Func to return the latest value. When the
         /// latest data comes back, it replaces what was previously in the
         /// cache.
-        ///
+        /// </para>
+        /// <para>
         /// This method is best suited for loading dynamic data from the
         /// Internet, while still showing the user earlier data.
-        ///
+        /// </para>
+        /// <para>
         /// This method returns an IObservable that may return *two* results
         /// (first the cached data, then the latest data). Therefore, it's
         /// important for UI applications that in your Subscribe method, you
         /// write the code to merge the second result when it comes in.
-        ///
+        /// </para>
+        /// <para>
         /// This also means that awaiting this method is a Bad Idea(tm), always
         /// use Subscribe.
+        /// </para>
         /// </summary>
         /// <typeparam name="T">The type of item to get.</typeparam>
         /// <param name="blobCache">The cache to get the item.</param>

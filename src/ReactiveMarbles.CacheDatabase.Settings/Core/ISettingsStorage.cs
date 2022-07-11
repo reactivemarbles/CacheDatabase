@@ -12,7 +12,6 @@ namespace ReactiveMarbles.CacheDatabase.Settings.Core
     /// <seealso cref="System.ComponentModel.INotifyPropertyChanged" />
     /// <seealso cref="System.IDisposable" />
     /// <seealso cref="System.IAsyncDisposable" />
-    /// <seealso cref="" />
     public interface ISettingsStorage : INotifyPropertyChanged, IDisposable, IAsyncDisposable
     {
         /// <summary>

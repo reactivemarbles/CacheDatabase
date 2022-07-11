@@ -269,8 +269,7 @@ namespace ReactiveMarbles.CacheDatabase.Core
                 : blobCache.GetObject<T>(key).Catch<T?, Exception>(_ =>
                     {
                         var value = fetchFunc();
-                        blobCache.InsertObject(key, value).Wait();
-                        return Observable.Return(value);
+                        return blobCache.InsertObject(key, value).Select(_ => value);
                     });
 
         /// <summary>

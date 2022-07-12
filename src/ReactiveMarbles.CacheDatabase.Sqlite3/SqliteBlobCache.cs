@@ -769,9 +769,7 @@ namespace ReactiveMarbles.CacheDatabase.Sqlite3
             await DisposeAsyncCore().ConfigureAwait(true);
 
             Dispose(false);
-#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
             GC.SuppressFinalize(this);
-#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
         }
 
         /// <summary>

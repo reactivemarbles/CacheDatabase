@@ -1,7 +1,11 @@
 ![License](https://img.shields.io/github/license/ReactiveMarbles/CacheDatabase.svg) [![Build](https://github.com/reactivemarbles/CacheDatabase/actions/workflows/ci-build.yml/badge.svg)](https://github.com/reactivemarbles/CacheDatabase/actions/workflows/ci-build.yml)
 
 # CacheDatabase
-![image CacheDatabase](./Images/LogoSmall.png)
+<p align="center">
+  <a href="https://github.com/reactivemarbles/CacheDatabase">
+    <img alt="CacheDatabase" src="images/logo.png" width="200"/>
+  </a>
+</p>
 
 A reimplementation of [Akavache](https://github.com/reactiveui/akavache) using the SQLite framework by [Frank Krueger](https://github.com/praeclarum/sqlite-net).
 

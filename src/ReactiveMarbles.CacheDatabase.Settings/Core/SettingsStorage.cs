@@ -83,7 +83,12 @@ namespace ReactiveMarbles.CacheDatabase.Settings.Core
         /// <returns>
         /// A task that represents the asynchronous dispose operation.
         /// </returns>
-        public ValueTask DisposeAsync() => _blobCache.DisposeAsync();
+        public ValueTask DisposeAsync()
+        {
+            var result = _blobCache.DisposeAsync();
+            GC.SuppressFinalize(this);
+            return result;
+        }
 
         /// <summary>
         /// Gets the value for the specified key, or, if the value doesn't exist, saves the <paramref name="defaultValue" /> and returns it.

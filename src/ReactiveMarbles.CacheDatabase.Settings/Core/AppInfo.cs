@@ -85,10 +85,7 @@ namespace ReactiveMarbles.CacheDatabase.Settings
         /// Overrides the settings cache path.
         /// </summary>
         /// <param name="path">The path.</param>
-        public static void OverrideSettingsCachePath(string path)
-        {
-            SettingsCachePath = path;
-        }
+        public static void OverrideSettingsCachePath(string path) => SettingsCachePath = path;
 
         /// <summary>
         /// Deletes the settings store.

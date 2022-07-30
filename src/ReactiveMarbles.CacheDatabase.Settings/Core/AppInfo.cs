@@ -94,30 +94,39 @@ namespace ReactiveMarbles.CacheDatabase.Settings
         /// Deletes the settings store.
         /// </summary>
         /// <typeparam name="T">The type of store to delete.</typeparam>
-        /// <returns>A Task.</returns>
-        public static async Task DeleteSettingsStore<T>()
+        /// <param name="overrideDatabaseName">Name of the override database.</param>
+        /// <returns>
+        /// A Task.
+        /// </returns>
+        public static async Task DeleteSettingsStore<T>(string? overrideDatabaseName = null)
         {
             await DisposeSettingsStore<T>().ConfigureAwait(false);
-            File.Delete(Path.Combine(SettingsCachePath!, $"{typeof(T).Name}.db"));
+            File.Delete(Path.Combine(SettingsCachePath!, $"{overrideDatabaseName ?? typeof(T).Name}.db"));
         }
 
         /// <summary>
         /// Gets the settings store.
         /// </summary>
         /// <typeparam name="T">The store to get.</typeparam>
-        /// <returns>A Settings Store.</returns>
-        public static ISettingsStorage? GetSettingsStore<T>() =>
-            SettingsStores[typeof(T).Name];
+        /// <param name="overrideDatabaseName">Name of the override database.</param>
+        /// <returns>
+        /// A Settings Store.
+        /// </returns>
+        public static ISettingsStorage? GetSettingsStore<T>(string? overrideDatabaseName = null) =>
+            SettingsStores[overrideDatabaseName ?? typeof(T).Name];
 
         /// <summary>
         /// Disposes the settings store.
         /// </summary>
         /// <typeparam name="T">The type of store.</typeparam>
-        /// <returns>A Task.</returns>
-        public static async Task DisposeSettingsStore<T>()
+        /// <param name="overrideDatabaseName">Name of the override database.</param>
+        /// <returns>
+        /// A Task.
+        /// </returns>
+        public static async Task DisposeSettingsStore<T>(string? overrideDatabaseName = null)
         {
-            await GetSettingsStore<T>()!.DisposeAsync().ConfigureAwait(false);
-            await BlobCaches[typeof(T).Name]!.DisposeAsync().ConfigureAwait(false);
+            await GetSettingsStore<T>(overrideDatabaseName)!.DisposeAsync().ConfigureAwait(false);
+            await BlobCaches[overrideDatabaseName ?? typeof(T).Name]!.DisposeAsync().ConfigureAwait(false);
         }
 
 #if ENCRYPTED

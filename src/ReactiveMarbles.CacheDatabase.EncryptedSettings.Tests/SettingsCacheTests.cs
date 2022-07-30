@@ -14,6 +14,7 @@ namespace ReactiveMarbles.CacheDatabase.EncryptedSettings.Tests
         /// <summary>
         /// Test1s this instance.
         /// </summary>
+        /// <param name="overrideDatabaseName">Name of the override database.</param>
         [Fact]
         public async void TestCreateAndInsert()
         {

@@ -171,43 +171,10 @@ namespace ReactiveMarbles.CacheDatabase.Sqlite3
             }
 
             var time = DateTimeOffset.UtcNow;
-            return _initialized
-                .SelectMany(async _ =>
-                    {
-                        try
-                        {
-                            var value = await Connection.GetAsync<CacheEntry>(key).ConfigureAwait(false);
-
-                            if (value is null)
-                            {
-                                throw new KeyNotFoundException($"Key {key} could not be found.");
-                            }
-
-                            if (value.TypeName is not null)
-                            {
-                                throw new KeyNotFoundException($"Key {key} is associated with an object.");
-                            }
-
-                            if (value.Id is null)
-                            {
-                                throw new KeyNotFoundException($"Key {key} is id is null.");
-                            }
-
-                            if (value.ExpiresAt <= time)
-                            {
-                                throw new KeyNotFoundException($"Key {key} has expired.");
-                            }
-
-                            return value;
-                        }
-                        catch (Exception)
-                        {
-                            throw new KeyNotFoundException($"Key {key} could not be found.");
-                        }
-                    })
-                .Select(x => x.Value)
-                .Where(x => x is not null)
-                .Select(x => x!);
+            return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().FirstAsync(x => x.Id != null && x.ExpiresAt > time && x.Id == key))
+                .Catch<CacheEntry, InvalidOperationException>(ex => Observable.Throw<CacheEntry>(new KeyNotFoundException(ex.Message)))
+                .Where(x => x?.Value is not null)
+                .Select(x => x.Value!);
         }
 
         /// <inheritdoc/>

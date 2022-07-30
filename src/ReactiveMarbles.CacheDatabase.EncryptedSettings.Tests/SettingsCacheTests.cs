@@ -14,6 +14,7 @@ namespace ReactiveMarbles.CacheDatabase.EncryptedSettings.Tests
         /// <summary>
         /// Test1s this instance.
         /// </summary>
+        /// <param name="overrideDatabaseName">Name of the override database.</param>
         [Fact]
         public async void TestCreateAndInsert()
         {
@@ -42,6 +43,17 @@ namespace ReactiveMarbles.CacheDatabase.EncryptedSettings.Tests
             viewSettings!.EnumTest = EnumTestValue.Option2;
             Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
             await viewSettings.DisposeAsync();
+        }
+
+        /// <summary>
+        /// Tests the override settings cache path.
+        /// </summary>
+        [Fact]
+        public void TestOverrideSettingsCachePath()
+        {
+            const string path = "c:\\SettingsStoreage\\ApplicationSettings\\";
+            AppInfo.OverrideSettingsCachePath(path);
+            Assert.Equal(path, AppInfo.SettingsCachePath);
         }
     }
 }

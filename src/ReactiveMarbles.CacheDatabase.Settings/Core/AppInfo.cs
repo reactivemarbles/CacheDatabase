@@ -4,14 +4,19 @@
 
 using ReactiveMarbles.CacheDatabase.Core;
 using ReactiveMarbles.CacheDatabase.Settings.Core;
+
 #if ENCRYPTED
+
 using ReactiveMarbles.CacheDatabase.EncryptedSqlite3;
+
 #else
 using ReactiveMarbles.CacheDatabase.Sqlite3;
 #endif
+
 using System.Reflection;
 
 #if ENCRYPTED
+
 namespace ReactiveMarbles.CacheDatabase.EncryptedSettings
 #else
 namespace ReactiveMarbles.CacheDatabase.Settings
@@ -46,7 +51,7 @@ namespace ReactiveMarbles.CacheDatabase.Settings
         /// <value>
         /// The settings cache path.
         /// </value>
-        public static string? SettingsCachePath { get; }
+        public static string? SettingsCachePath { get; private set; }
 
         /// <summary>
         /// Gets the executing assembly.
@@ -77,48 +82,70 @@ namespace ReactiveMarbles.CacheDatabase.Settings
         internal static Dictionary<string, ISettingsStorage?> SettingsStores { get; }
 
         /// <summary>
+        /// Overrides the settings cache path.
+        /// </summary>
+        /// <param name="path">The path.</param>
+        public static void OverrideSettingsCachePath(string path)
+        {
+            SettingsCachePath = path;
+        }
+
+        /// <summary>
         /// Deletes the settings store.
         /// </summary>
         /// <typeparam name="T">The type of store to delete.</typeparam>
-        /// <returns>A Task.</returns>
-        public static async Task DeleteSettingsStore<T>()
+        /// <param name="overrideDatabaseName">Name of the override database.</param>
+        /// <returns>
+        /// A Task.
+        /// </returns>
+        public static async Task DeleteSettingsStore<T>(string? overrideDatabaseName = null)
         {
             await DisposeSettingsStore<T>().ConfigureAwait(false);
-            File.Delete(Path.Combine(SettingsCachePath!, $"{typeof(T).Name}.db"));
+            File.Delete(Path.Combine(SettingsCachePath!, $"{overrideDatabaseName ?? typeof(T).Name}.db"));
         }
 
         /// <summary>
         /// Gets the settings store.
         /// </summary>
         /// <typeparam name="T">The store to get.</typeparam>
-        /// <returns>A Settings Store.</returns>
-        public static ISettingsStorage? GetSettingsStore<T>() =>
-            SettingsStores[typeof(T).Name];
+        /// <param name="overrideDatabaseName">Name of the override database.</param>
+        /// <returns>
+        /// A Settings Store.
+        /// </returns>
+        public static ISettingsStorage? GetSettingsStore<T>(string? overrideDatabaseName = null) =>
+            SettingsStores[overrideDatabaseName ?? typeof(T).Name];
 
         /// <summary>
         /// Disposes the settings store.
         /// </summary>
         /// <typeparam name="T">The type of store.</typeparam>
-        /// <returns>A Task.</returns>
-        public static async Task DisposeSettingsStore<T>()
+        /// <param name="overrideDatabaseName">Name of the override database.</param>
+        /// <returns>
+        /// A Task.
+        /// </returns>
+        public static async Task DisposeSettingsStore<T>(string? overrideDatabaseName = null)
         {
-            await GetSettingsStore<T>()!.DisposeAsync().ConfigureAwait(false);
-            await BlobCaches[typeof(T).Name]!.DisposeAsync().ConfigureAwait(false);
+            await GetSettingsStore<T>(overrideDatabaseName)!.DisposeAsync().ConfigureAwait(false);
+            await BlobCaches[overrideDatabaseName ?? typeof(T).Name]!.DisposeAsync().ConfigureAwait(false);
         }
 
 #if ENCRYPTED
+
         /// <summary>
         /// Setup the secure settings store.
         /// </summary>
         /// <typeparam name="T">The Type of settings store.</typeparam>
         /// <param name="password">Secure password.</param>
         /// <param name="initialise">Initialise the Settings values.</param>
-        /// <returns>The Settings store.</returns>
-        public static async Task<T?> SetupSettingsStore<T>(string password, bool initialise = true)
+        /// <param name="overrideDatabaseName">Name of the override database.</param>
+        /// <returns>
+        /// The Settings store.
+        /// </returns>
+        public static async Task<T?> SetupSettingsStore<T>(string password, bool initialise = true, string? overrideDatabaseName = null)
             where T : ISettingsStorage?, new()
         {
             Directory.CreateDirectory(SettingsCachePath!);
-            BlobCaches[typeof(T).Name] = new EncryptedSqliteBlobCache(Path.Combine(SettingsCachePath!, $"{typeof(T).Name}.db"), password);
+            BlobCaches[typeof(T).Name] = new EncryptedSqliteBlobCache(Path.Combine(SettingsCachePath!, $"{overrideDatabaseName ?? typeof(T).Name}.db"), password);
 
             var viewSettings = new T();
             SettingsStores[typeof(T).Name] = viewSettings;
@@ -129,6 +156,7 @@ namespace ReactiveMarbles.CacheDatabase.Settings
 
             return viewSettings;
         }
+
 #else
 
         /// <summary>
@@ -136,12 +164,15 @@ namespace ReactiveMarbles.CacheDatabase.Settings
         /// </summary>
         /// <typeparam name="T">The Type of settings store.</typeparam>
         /// <param name="initialise">Initialise the Settings values.</param>
-        /// <returns>The Settings store.</returns>
-        public static async Task<T?> SetupSettingsStore<T>(bool initialise = true)
+        /// <param name="overrideDatabaseName">Name of the override database.</param>
+        /// <returns>
+        /// The Settings store.
+        /// </returns>
+        public static async Task<T?> SetupSettingsStore<T>(bool initialise = true, string? overrideDatabaseName = null)
             where T : ISettingsStorage?, new()
         {
             Directory.CreateDirectory(SettingsCachePath!);
-            BlobCaches[typeof(T).Name] = new SqliteBlobCache(Path.Combine(SettingsCachePath!, $"{typeof(T).Name}.db"));
+            BlobCaches[typeof(T).Name] = new SqliteBlobCache(Path.Combine(SettingsCachePath!, $"{overrideDatabaseName ?? typeof(T).Name}.db"));
 
             var viewSettings = new T();
             SettingsStores[typeof(T).Name] = viewSettings;

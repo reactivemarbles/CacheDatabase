@@ -127,6 +127,12 @@ public class ViewSettings : SettingsBase
 }
 ```
 
+## OPTIONAL: Override Settings Cache Path
+
+```c#
+AppInfo.OverrideSettingsCachePath(path);
+```
+
 ## Create an instance or get existing Settings SettingsCache
 
 Install ReactiveMarbles.CacheDatabase.Settings

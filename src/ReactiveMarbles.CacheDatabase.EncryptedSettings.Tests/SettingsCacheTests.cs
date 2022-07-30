@@ -43,5 +43,16 @@ namespace ReactiveMarbles.CacheDatabase.EncryptedSettings.Tests
             Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
             await viewSettings.DisposeAsync();
         }
+
+        /// <summary>
+        /// Tests the override settings cache path.
+        /// </summary>
+        [Fact]
+        public void TestOverrideSettingsCachePath()
+        {
+            const string path = "c:\\SettingsStoreage\\ApplicationSettings\\";
+            AppInfo.OverrideSettingsCachePath(path);
+            Assert.Equal(path, AppInfo.SettingsCachePath);
+        }
     }
 }

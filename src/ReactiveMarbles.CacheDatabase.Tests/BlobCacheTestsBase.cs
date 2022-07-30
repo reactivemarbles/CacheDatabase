@@ -1186,6 +1186,25 @@ namespace ReactiveMarbles.CacheDatabase.Tests
         }
 
         /// <summary>
+        /// Tests the issue.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+        [Fact]
+        public async Task TestIssueAsync()
+        {
+            using (Utility.WithEmptyDirectory(out var path))
+            await using (var fixture = CreateBlobCache(path))
+            {
+                var cacheKey = "cacheKey";
+                var someObject = new string[] { "someObject" };
+                await fixture.InsertObject(cacheKey, someObject.AsEnumerable(), null);
+                Assert.NotNull(await fixture.GetObject<IEnumerable<string>>(cacheKey));
+                Assert.NotNull(await fixture.Get(cacheKey, typeof(IEnumerable<string>)));
+                Assert.NotNull(await fixture.Get(cacheKey));
+            }
+        }
+
+        /// <summary>
         /// Gets the <see cref="IBlobCache"/> we want to do the tests against.
         /// </summary>
         /// <param name="path">The path to the blob cache.</param>

@@ -21,22 +21,12 @@ jobs:
       with:
         fetch-depth: 0
         lfs: true
-
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v2.1.0
-      with:
-        dotnet-version: 3.1.x
-
-    - name: Install .NET 5
-      uses: actions/setup-dotnet@v2.1.0
-      with:
-        dotnet-version: 5.0.x
-
+        
     - name: Install .NET 6
-      uses: actions/setup-dotnet@v2.1.0
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.x
-        include-prerelease: true
+        dotnet-quality: 'preview'
 
     - name: NBGV
       id: nbgv

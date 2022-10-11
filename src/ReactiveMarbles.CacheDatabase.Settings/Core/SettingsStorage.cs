@@ -32,7 +32,7 @@ namespace ReactiveMarbles.CacheDatabase.Settings.Core
         /// <param name="cache">
         /// An <see cref="IBlobCache"/> implementation where you want your settings to be stored.
         /// </param>
-        protected SettingsStorage(string keyPrefix, IBlobCache cache!!)
+        protected SettingsStorage(string keyPrefix, IBlobCache cache)
         {
             if (string.IsNullOrWhiteSpace(keyPrefix))
             {

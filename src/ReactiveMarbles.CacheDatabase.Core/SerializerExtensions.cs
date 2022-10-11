@@ -28,7 +28,7 @@ namespace ReactiveMarbles.CacheDatabase.Core
         /// <param name="keyValuePairs">The key/value to insert.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>A observable which signals when complete.</returns>
-        public static IObservable<Unit> InsertObjects<T>(this IBlobCache blobCache, IEnumerable<KeyValuePair<string, T>> keyValuePairs!!, DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<Unit> InsertObjects<T>(this IBlobCache blobCache, IEnumerable<KeyValuePair<string, T>> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
             if (blobCache is null)
             {
@@ -47,7 +47,7 @@ namespace ReactiveMarbles.CacheDatabase.Core
         /// <param name="blobCache">The blob cache.</param>
         /// <param name="keys">The keys to get the values for.</param>
         /// <returns>A observable with the specified values.</returns>
-        public static IObservable<KeyValuePair<string, T>> GetObjects<T>(this IBlobCache blobCache, IEnumerable<string> keys!!)
+        public static IObservable<KeyValuePair<string, T>> GetObjects<T>(this IBlobCache blobCache, IEnumerable<string> keys)
         {
             if (blobCache is null)
             {
@@ -114,7 +114,7 @@ namespace ReactiveMarbles.CacheDatabase.Core
         /// <param name="blobCache">The blob cache.</param>
         /// <returns>A Future result representing all objects in the cache
         /// with the specified Type.</returns>
-        public static IObservable<T> GetAllObjects<T>(this IBlobCache blobCache!!) =>
+        public static IObservable<T> GetAllObjects<T>(this IBlobCache blobCache) =>
             blobCache is null
                 ? throw new ArgumentNullException(nameof(blobCache))
                 : blobCache
@@ -219,7 +219,7 @@ namespace ReactiveMarbles.CacheDatabase.Core
         /// <typeparam name="T">The type of item to get.</typeparam>
         /// <returns>A Future result representing the deserialized object from
         /// the cache.</returns>
-        public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache!!, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null) =>
+        public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null) =>
             blobCache.GetObject<T>(key).Catch<T?, Exception>(_ => fetchFunc());
 
         /// <summary>
@@ -242,7 +242,7 @@ namespace ReactiveMarbles.CacheDatabase.Core
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>A Future result representing the deserialized object from
         /// the cache.</returns>
-        public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache!!, string key, Func<Task<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null) =>
+        public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<Task<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null) =>
             blobCache.GetOrFetchObject(key, () => fetchFunc().ToObservable(), absoluteExpiration);
 
         /// <summary>
@@ -309,7 +309,7 @@ namespace ReactiveMarbles.CacheDatabase.Core
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version).</returns>
         public static IObservable<T?> GetAndFetchLatest<T>(
-            this IBlobCache blobCache!!,
+            this IBlobCache blobCache,
             string key,
             Func<IObservable<T>> fetchFunc,
             Func<DateTimeOffset, bool>? fetchPredicate = null,
@@ -392,7 +392,7 @@ namespace ReactiveMarbles.CacheDatabase.Core
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version).</returns>
         public static IObservable<T?> GetAndFetchLatest<T>(
-            this IBlobCache blobCache!!,
+            this IBlobCache blobCache,
             string key,
             Func<Task<T>> fetchFunc,
             Func<DateTimeOffset, bool>? fetchPredicate = null,

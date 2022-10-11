@@ -48,7 +48,7 @@ namespace ReactiveMarbles.CacheDatabase.Core
         /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>The data downloaded from the URL.</returns>
-        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache!!, string url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
             blobCache.DownloadUrl(url, url, method, headers, fetchAlways, absoluteExpiration);
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace ReactiveMarbles.CacheDatabase.Core
         /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>The data downloaded from the URL.</returns>
-        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache!!, Uri url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) => url is null
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) => url is null
                 ? throw new ArgumentNullException(nameof(url))
                 : blobCache.DownloadUrl(url.ToString(), url, method, headers, fetchAlways, absoluteExpiration);
 

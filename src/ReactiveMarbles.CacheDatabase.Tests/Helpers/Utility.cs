@@ -20,7 +20,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests.Helpers
         /// <param name="directoryPath">The path to delete.</param>
         public static void DeleteDirectory(string directoryPath)
         {
-            // From http://stackoverflow.com/questions/329355/cannot-delete-directory-with-directory-deletepath-true/329502#329502
+            // From https://stackoverflow.com/questions/329355/cannot-delete-directory-with-directory-deletepath-true/329502#329502
             try
             {
                 var di = new DirectoryInfo(directoryPath);

@@ -16,17 +16,34 @@ jobs:
     outputs:
       nbgv: ${{ steps.nbgv.outputs.SemVer2 }}
     steps:
+    - name: Get Current Visual Studio Information
+      shell: bash
+      run: |
+        dotnet tool update -g dotnet-vs
+        echo "-- About RELEASE --"
+        vs where release
+        
+    - name: Update Visual Studio Latest Release
+      shell: bash
+      run: |
+        echo "-- Update RELEASE --"
+        vs update release Enterprise
+        vs modify release Enterprise +mobile +desktop +uwp +web
+        echo "-- About RELEASE Updated --"
+        vs where release
+
     - name: Checkout
       uses: actions/checkout@v3.3.0
       with:
         fetch-depth: 0
         lfs: true
         
-    - name: Install .NET 6
+    - name: Install .NET 6 & 7
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
-        dotnet-quality: 'preview'
+        dotnet-version: |
+            6.0.x
+            7.0.x
 
     - name: NBGV
       id: nbgv
@@ -43,14 +60,13 @@ jobs:
       working-directory: src
 
     - name: Run Unit Tests and Generate Coverage
-      uses: glennawatson/coverlet-msbuild@v2
+      uses: glennawatson/coverlet-msbuild@v2.1
       with:
         project-files: '**/*Tests*.csproj'
         no-build: true
         exclude-filter: '[${{env.productNamespacePrefix}}.*.Tests.*]*'
         include-filter: '[${{env.productNamespacePrefix}}*]*'
         output-format: cobertura
-        output: '../../artifacts/'
         configuration: ${{ env.configuration }}
 
     - name: Pack
@@ -58,12 +74,7 @@ jobs:
       working-directory: src
 
     - name: Upload Code Coverage
-      shell: bash
-      run: |
-        echo $PWD
-        bash <(curl -s https://codecov.io/bash) -X gcov -X coveragepy -t ${{ env.CODECOV_TOKEN }} -s '$PWD/artifacts' -f '*.xml'
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      uses: codecov/codecov-action@v3
 
     - name: Create NuGet Artifacts
       uses: actions/upload-artifact@master

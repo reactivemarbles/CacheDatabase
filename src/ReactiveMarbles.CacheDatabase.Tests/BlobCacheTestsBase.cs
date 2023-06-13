@@ -182,9 +182,9 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 }
             }
 
-            Assert.Equal(input.First().Blog, result.First().Blog);
-            Assert.Equal(input.First().Bio, result.First().Bio);
-            Assert.Equal(input.First().Name, result.First().Name);
+            Assert.Equal(input[0].Blog, result[0].Blog);
+            Assert.Equal(input[0].Bio, result[0].Bio);
+            Assert.Equal(input[0].Name, result[0].Name);
             Assert.Equal(input.Last().Blog, result.Last().Blog);
             Assert.Equal(input.Last().Bio, result.Last().Bio);
             Assert.Equal(input.Last().Name, result.Last().Name);
@@ -247,8 +247,8 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 }
             }
 
-            Assert.Equal(input.First().Age, result.First().Age);
-            Assert.Equal(input.First().Name, result.First().Name);
+            Assert.Equal(input[0].Age, result[0].Age);
+            Assert.Equal(input[0].Name, result[0].Name);
             Assert.Equal(input.Last().Age, result.Last().Age);
             Assert.Equal(input.Last().Name, result.Last().Name);
         }
@@ -297,8 +297,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
         /// Makes sure the fetch function debounces current requests.
         /// </summary>
         [Fact(Skip = "TestScheduler tests aren't gonna work with new SQLite")]
-        public void FetchFunctionShouldDebounceConcurrentRequests()
-        {
+        public void FetchFunctionShouldDebounceConcurrentRequests() =>
             new TestScheduler().With(sched =>
             {
                 using (Utility.WithEmptyDirectory(out var path))
@@ -383,7 +382,6 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                     }
                 }
             });
-        }
 
         /// <summary>
         /// Makes sure that the fetch function propogates thrown exceptions.
@@ -392,10 +390,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
         [Fact]
         public async Task FetchFunctionShouldPropagateThrownExceptionAsObservableException()
         {
-            var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
-            {
-                throw new InvalidOperationException();
-            });
+            var fetcher = new Func<IObservable<Tuple<string, string>>>(() => throw new InvalidOperationException());
 
             using (Utility.WithEmptyDirectory(out var path))
             await using (var fixture = CreateBlobCache(path))
@@ -517,12 +512,12 @@ namespace ReactiveMarbles.CacheDatabase.Tests
         {
             var fetchPredicateCalled = false;
 
-            Func<DateTimeOffset, bool> fetchPredicate = d =>
+            bool FetchPredicate(DateTimeOffset d)
             {
                 fetchPredicateCalled = true;
 
                 return true;
-            };
+            }
 
             var fetcher = new Func<IObservable<string>>(() => Observable.Return("baz"));
 
@@ -534,7 +529,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 {
                     await fixture.InsertObject("foo", "bar").FirstAsync();
 
-                    await fixture.GetAndFetchLatest("foo", fetcher, fetchPredicate).LastAsync();
+                    await fixture.GetAndFetchLatest("foo", fetcher, FetchPredicate).LastAsync();
 
                     Assert.True(fetchPredicateCalled);
                 }

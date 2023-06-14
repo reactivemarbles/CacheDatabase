@@ -13,6 +13,7 @@ using ReactiveMarbles.CacheDatabase.EncryptedSqlite3;
 using ReactiveMarbles.CacheDatabase.Sqlite3;
 #endif
 
+using System.Diagnostics;
 using System.Reflection;
 
 #if ENCRYPTED
@@ -34,7 +35,8 @@ namespace ReactiveMarbles.CacheDatabase.Settings
             ExecutingAssemblyName = ExecutingAssembly.FullName!.Split(',')[0];
             ApplicationRootPath = Path.Combine(Path.GetDirectoryName(ExecutingAssembly.Location)!, "..");
             SettingsCachePath = Path.Combine(ApplicationRootPath, "SettingsCache");
-            Version = ExecutingAssembly.GetName().Version;
+            var fileVersionInfo = FileVersionInfo.GetVersionInfo(ExecutingAssembly.Location);
+            Version = new(fileVersionInfo.ProductMajorPart, fileVersionInfo.ProductMinorPart, fileVersionInfo.ProductBuildPart, fileVersionInfo.ProductPrivatePart);
         }
 
         /// <summary>

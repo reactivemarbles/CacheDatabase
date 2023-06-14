@@ -23,7 +23,7 @@
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="6.11.0" />
     <PackageReference Include="Microsoft.Reactive.Testing" Version="6.0.0" />
-    <PackageReference Include="ReactiveUI.Testing" Version="18.4.26" />
+    <PackageReference Include="ReactiveUI.Testing" Version="19.2.1" />
   </ItemGroup>
 
   <ItemGroup>

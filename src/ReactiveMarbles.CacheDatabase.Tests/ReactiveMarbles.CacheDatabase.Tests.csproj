@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.3" />
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.5" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.6" />
     <PackageReference Include="sqlite-net-sqlcipher" Version="1.9.141-beta" />
     <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.5" />
     <PackageReference Include="sqlite-net-pcl" Version="1.9.141-beta" />

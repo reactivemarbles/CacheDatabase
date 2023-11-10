@@ -18,6 +18,7 @@ using ReactiveMarbles.CacheDatabase.NewtonsoftJson;
 using ReactiveMarbles.CacheDatabase.SystemTextJson;
 using ReactiveMarbles.CacheDatabase.Tests.Helpers;
 using ReactiveMarbles.CacheDatabase.Tests.Mocks;
+using ReactiveUI;
 using ReactiveUI.Testing;
 using SQLite;
 using Xunit;
@@ -296,92 +297,143 @@ namespace ReactiveMarbles.CacheDatabase.Tests
         /// <summary>
         /// Makes sure the fetch function debounces current requests.
         /// </summary>
-        [Fact(Skip = "TestScheduler tests aren't gonna work with new SQLite")]
-        public void FetchFunctionShouldDebounceConcurrentRequests() =>
-            new TestScheduler().With(sched =>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+        [Fact] // (Skip = "TestScheduler tests aren't gonna work with new SQLite")]
+        public async Task FetchFunctionShouldDebounceConcurrentRequestsAsync()
+        {
+            using var testSequencer = new TestSequencer();
+            var sched = new TestScheduler();
+            using (Utility.WithEmptyDirectory(out var path))
             {
-                using (Utility.WithEmptyDirectory(out var path))
+                var callCount = 0;
+                var fetcher = new Func<IObservable<int>>(() =>
                 {
-                    var callCount = 0;
-                    var fetcher = new Func<IObservable<int>>(() =>
+                    callCount++;
+                    return Observable.Return(42)
+                    .Delay(TimeSpan.FromMilliseconds(1000), ImmediateScheduler.Instance);
+                });
+
+                var fixture = CreateBlobCache(path);
+                sched.Start();
+
+                var result1 = 0;
+                var result2 = 0;
+                var result3 = 0;
+                var result4 = 0;
+                var result5 = 0;
+                fixture.GetOrFetchObject("foo", fetcher)
+                .ObserveOn(ImmediateScheduler.Instance)
+                .Subscribe(async x =>
+                {
+                    result1++;
+                    if (result2 == 1 && result3 == 1)
                     {
-                        callCount++;
-                        return Observable.Return(42).Delay(TimeSpan.FromMilliseconds(1000), sched);
-                    });
-
-                    var fixture = CreateBlobCache(path);
-                    try
-                    {
-                        fixture.GetOrFetchObject("foo", fetcher).ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var result1).Subscribe();
-
-                        Assert.Equal(0, result1.Count);
-
-                        sched.AdvanceToMs(250);
-
-                        // Nobody's returned yet, cache is empty, we should have called the fetcher
-                        // once to get a result
-                        fixture.GetOrFetchObject("foo", fetcher).ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var result2).Subscribe();
-                        Assert.Equal(0, result1.Count);
-                        Assert.Equal(0, result2.Count);
-                        Assert.Equal(1, callCount);
-
-                        sched.AdvanceToMs(750);
-
-                        // Same as above, result1-3 are all listening to the same fetch
-                        fixture.GetOrFetchObject("foo", fetcher).ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var result3).Subscribe();
-                        Assert.Equal(0, result1.Count);
-                        Assert.Equal(0, result2.Count);
-                        Assert.Equal(0, result3.Count);
-                        Assert.Equal(1, callCount);
-
-                        // Fetch returned, all three collections should have an item
-                        sched.AdvanceToMs(1250);
-                        Assert.Equal(1, result1.Count);
-                        Assert.Equal(1, result2.Count);
-                        Assert.Equal(1, result3.Count);
-                        Assert.Equal(1, callCount);
-
-                        // Making a new call, but the cache has an item, this shouldn't result
-                        // in a fetcher call either
-                        fixture.GetOrFetchObject("foo", fetcher).ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var result4).Subscribe();
-                        sched.AdvanceToMs(2500);
-                        Assert.Equal(1, result1.Count);
-                        Assert.Equal(1, result2.Count);
-                        Assert.Equal(1, result3.Count);
-                        Assert.Equal(1, result4.Count);
-                        Assert.Equal(1, callCount);
-
-                        // Making a new call, but with a new key - this *does* result in a fetcher
-                        // call. Result1-4 shouldn't get any new items, and at t=3000, we haven't
-                        // returned from the call made at t=2500 yet
-                        fixture.GetOrFetchObject("bar", fetcher).ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var result5).Subscribe();
-                        sched.AdvanceToMs(3000);
-                        Assert.Equal(1, result1.Count);
-                        Assert.Equal(1, result2.Count);
-                        Assert.Equal(1, result3.Count);
-                        Assert.Equal(1, result4.Count);
-                        Assert.Equal(0, result5.Count);
-                        Assert.Equal(2, callCount);
-
-                        // Everything is done, we should have one item in result5 now
-                        sched.AdvanceToMs(4000);
-                        Assert.Equal(1, result1.Count);
-                        Assert.Equal(1, result2.Count);
-                        Assert.Equal(1, result3.Count);
-                        Assert.Equal(1, result4.Count);
-                        Assert.Equal(1, result5.Count);
-                        Assert.Equal(2, callCount);
+                        await testSequencer.AdvancePhaseAsync("Result 1");
                     }
-                    finally
+                });
+
+                Assert.Equal(0, result1);
+
+                sched.AdvanceToMs(250);
+
+                // Nobody's returned yet, cache is empty, we should have called the fetcher
+                // once to get a result
+                fixture.GetOrFetchObject("foo", fetcher)
+                .ObserveOn(ImmediateScheduler.Instance)
+                .Subscribe(async x =>
+                {
+                    result2++;
+                    if (result1 == 1 && result3 == 1)
                     {
-                        // Since we're in TestScheduler, we can't use the normal
-                        // using statement, we need to kick off the async dispose,
-                        // then start the scheduler to let it run
-                        fixture.Dispose();
-                        sched.Start();
+                        await testSequencer.AdvancePhaseAsync("Result 2");
                     }
-                }
-            });
+                });
+
+                Assert.Equal(0, result1);
+                Assert.Equal(0, result2);
+                Assert.Equal(0, callCount);
+
+                sched.AdvanceToMs(750);
+
+                // Same as above, result1-3 are all listening to the same fetch
+                fixture.GetOrFetchObject("foo", fetcher)
+                .ObserveOn(ImmediateScheduler.Instance)
+                .Subscribe(async x =>
+                {
+                    result3++;
+                    if (result1 == 1 && result2 == 1)
+                    {
+                        await testSequencer.AdvancePhaseAsync("Result 3");
+                    }
+                });
+
+                Assert.Equal(0, result1);
+                Assert.Equal(0, result2);
+                Assert.Equal(0, result3);
+                Assert.Equal(0, callCount);
+
+                // Fetch returned, all three collections should have an item
+                sched.AdvanceToMs(1250);
+                await testSequencer.AdvancePhaseAsync("Result 1-3");
+                Assert.Equal(1, result1);
+                Assert.Equal(1, result2);
+                Assert.Equal(1, result3);
+                Assert.Equal(3, callCount);
+
+                // Making a new call, but the cache has an item, this shouldn't result
+                // in a fetcher call either
+                fixture.GetOrFetchObject("foo", fetcher)
+                .ObserveOn(ImmediateScheduler.Instance)
+                .Subscribe(async x =>
+                {
+                    result4++;
+                    await testSequencer.AdvancePhaseAsync("Result 4");
+                });
+
+                sched.AdvanceToMs(2500);
+                Assert.Equal(1, result1);
+                Assert.Equal(1, result2);
+                Assert.Equal(1, result3);
+                await testSequencer.AdvancePhaseAsync("Result 4");
+                Assert.Equal(1, result4);
+                Assert.Equal(4, callCount);
+
+                // Making a new call, but with a new key - this *does* result in a fetcher
+                // call. Result1-4 shouldn't get any new items, and at t=3000, we haven't
+                // returned from the call made at t=2500 yet
+                fixture.GetOrFetchObject("bar", fetcher) // .ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var result5).Subscribe();
+                .ObserveOn(ImmediateScheduler.Instance)
+                .Subscribe(async x =>
+                {
+                    result5++;
+                    await testSequencer.AdvancePhaseAsync("Result 5");
+                });
+
+                sched.AdvanceToMs(3000);
+                Assert.Equal(1, result1);
+                Assert.Equal(1, result2);
+                Assert.Equal(1, result3);
+                Assert.Equal(1, result4);
+                Assert.Equal(0, result5);
+                Assert.Equal(4, callCount);
+
+                // Everything is done, we should have one item in result5 now
+                sched.AdvanceToMs(4000);
+                Assert.Equal(1, result1);
+                Assert.Equal(1, result2);
+                Assert.Equal(1, result3);
+                Assert.Equal(1, result4);
+                await testSequencer.AdvancePhaseAsync("Result 5");
+                Assert.Equal(1, result5);
+                Assert.Equal(5, callCount);
+
+                // Since we're in TestScheduler, we can't use the normal
+                // using statement, we need to kick off the async dispose,
+                // then start the scheduler to let it run
+                fixture.Dispose();
+                testSequencer.Dispose();
+            }
+        }
 
         /// <summary>
         /// Makes sure that the fetch function propogates thrown exceptions.

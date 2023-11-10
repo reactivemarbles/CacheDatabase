@@ -401,6 +401,6 @@ namespace ReactiveMarbles.CacheDatabase.Core
             Func<T, bool>? cacheValidationPredicate = null) =>
                 blobCache.GetAndFetchLatest(key, () => fetchFunc().ToObservable(), fetchPredicate, absoluteExpiration, shouldInvalidateOnError, cacheValidationPredicate);
 
-        internal static string GetTypePrefixedKey(string key, Type type) => type.FullName + "___" + key;
+        internal static string GetTypePrefixedKey(this string key, Type type) => type.FullName + "___" + key;
     }
 }

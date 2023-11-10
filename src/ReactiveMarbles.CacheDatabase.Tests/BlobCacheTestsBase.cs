@@ -323,9 +323,13 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 var result5 = 0;
                 fixture.GetOrFetchObject("foo", fetcher)
                 .ObserveOn(ImmediateScheduler.Instance)
-                .Subscribe(x =>
+                .Subscribe(async x =>
                 {
                     result1++;
+                    if (result2 == 1 && result3 == 1)
+                    {
+                        await testSequencer.AdvancePhaseAsync("Result 1");
+                    }
                 });
 
                 Assert.Equal(0, result1);
@@ -336,9 +340,13 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 // once to get a result
                 fixture.GetOrFetchObject("foo", fetcher)
                 .ObserveOn(ImmediateScheduler.Instance)
-                .Subscribe(x =>
+                .Subscribe(async x =>
                 {
                     result2++;
+                    if (result1 == 1 && result3 == 1)
+                    {
+                        await testSequencer.AdvancePhaseAsync("Result 2");
+                    }
                 });
 
                 Assert.Equal(0, result1);
@@ -353,7 +361,10 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 .Subscribe(async x =>
                 {
                     result3++;
-                    await testSequencer.AdvancePhaseAsync("Result 1-3");
+                    if (result1 == 1 && result2 == 1)
+                    {
+                        await testSequencer.AdvancePhaseAsync("Result 3");
+                    }
                 });
 
                 Assert.Equal(0, result1);

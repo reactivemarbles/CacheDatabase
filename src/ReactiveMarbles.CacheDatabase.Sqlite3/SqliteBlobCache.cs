@@ -100,10 +100,14 @@ namespace ReactiveMarbles.CacheDatabase.Sqlite3
         public SqliteBlobCache(SQLiteConnectionString connectionString, IScheduler? scheduler = null)
 #endif
         {
+#if NETSTANDARD
             if (connectionString is null)
             {
                 throw new ArgumentNullException(nameof(connectionString));
             }
+#else
+            ArgumentNullException.ThrowIfNull(connectionString);
+#endif
 
             Connection = new SQLiteAsyncConnection(connectionString);
             Scheduler = scheduler ?? CoreRegistrations.TaskpoolScheduler;

@@ -47,6 +47,6 @@ namespace ReactiveMarbles.CacheDatabase.Sqlite3
         /// <summary>
         /// Gets or sets the value of the entry.
         /// </summary>
-        public byte[]? Value { get; set; } = Array.Empty<byte>();
+        public byte[]? Value { get; set; } = [];
     }
 }

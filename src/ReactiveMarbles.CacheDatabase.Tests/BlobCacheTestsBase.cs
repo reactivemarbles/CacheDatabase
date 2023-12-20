@@ -36,7 +36,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
         public static IEnumerable<object[]> Serializers { get; } = new[]
         {
             new object[] { typeof(SystemJsonSerializer) },
-            new object[] { typeof(NewtonsoftSerializer) },
+            [typeof(NewtonsoftSerializer)],
         };
 
         /// <summary>
@@ -323,7 +323,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 var result5 = 0;
                 fixture.GetOrFetchObject("foo", fetcher)
                 .ObserveOn(ImmediateScheduler.Instance)
-                .Subscribe(async x =>
+                .Subscribe(async _ =>
                 {
                     result1++;
                     if (result2 == 1 && result3 == 1)
@@ -340,7 +340,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 // once to get a result
                 fixture.GetOrFetchObject("foo", fetcher)
                 .ObserveOn(ImmediateScheduler.Instance)
-                .Subscribe(async x =>
+                .Subscribe(async _ =>
                 {
                     result2++;
                     if (result1 == 1 && result3 == 1)
@@ -358,7 +358,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 // Same as above, result1-3 are all listening to the same fetch
                 fixture.GetOrFetchObject("foo", fetcher)
                 .ObserveOn(ImmediateScheduler.Instance)
-                .Subscribe(async x =>
+                .Subscribe(async _ =>
                 {
                     result3++;
                     if (result1 == 1 && result2 == 1)
@@ -384,7 +384,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 // in a fetcher call either
                 fixture.GetOrFetchObject("foo", fetcher)
                 .ObserveOn(ImmediateScheduler.Instance)
-                .Subscribe(async x =>
+                .Subscribe(async _ =>
                 {
                     result4++;
                     await testSequencer.AdvancePhaseAsync("Result 4");
@@ -403,7 +403,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 // returned from the call made at t=2500 yet
                 fixture.GetOrFetchObject("bar", fetcher) // .ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var result5).Subscribe();
                 .ObserveOn(ImmediateScheduler.Instance)
-                .Subscribe(async x =>
+                .Subscribe(async _ =>
                 {
                     result5++;
                     await testSequencer.AdvancePhaseAsync("Result 5");
@@ -482,9 +482,8 @@ namespace ReactiveMarbles.CacheDatabase.Tests
         /// </summary>
         /// <returns>A task to monitor the progress.</returns>
         [Fact(Skip = "TestScheduler tests aren't gonna work with new SQLite")]
-        public Task GetOrFetchShouldRespectExpiration()
-        {
-            return new TestScheduler().With(async sched =>
+        public Task GetOrFetchShouldRespectExpiration() =>
+            new TestScheduler().With(async sched =>
             {
                 using (Utility.WithEmptyDirectory(out var path))
                 {
@@ -522,7 +521,6 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                     }
                 }
             });
-        }
 
         /// <summary>
         /// Makes sure that the GetAndFetchLatest invalidates objects on errors.
@@ -564,12 +562,14 @@ namespace ReactiveMarbles.CacheDatabase.Tests
         {
             var fetchPredicateCalled = false;
 
+#pragma warning disable RCS1163 // Unused parameter.
             bool FetchPredicate(DateTimeOffset d)
             {
                 fetchPredicateCalled = true;
 
                 return true;
             }
+#pragma warning restore RCS1163 // Unused parameter.
 
             var fetcher = new Func<IObservable<string>>(() => Observable.Return("baz"));
 
@@ -617,7 +617,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                     // GetAndFetchLatest skips cache invalidation/storage due to cache validation predicate.
                     await fixture.InsertObject(key, items);
 
-                    await fixture.GetAndFetchLatest(key, fetcher, cacheValidationPredicate: i => i is not null && i.Count > 0).LastAsync();
+                    await fixture.GetAndFetchLatest(key, fetcher, cacheValidationPredicate: i => i?.Count > 0).LastAsync();
 
                     var result = await fixture.GetObject<List<int>>(key).FirstAsync();
 
@@ -846,7 +846,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 var data = new byte[] { 0x10, 0x20, 0x30, };
                 var keys = new[] { "Foo", "Bar", "Baz", };
 
-                await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync())).ConfigureAwait(false);
+                await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync()));
 
                 Assert.Equal(keys.Length, (await fixture.GetAllKeys().ToList().FirstAsync()).Count);
 
@@ -870,7 +870,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 var data = new byte[] { 0x10, 0x20, 0x30, };
                 var keys = new[] { "Foo", "Bar", "Baz", };
 
-                await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data, DateTimeOffset.MinValue).FirstAsync())).ConfigureAwait(false);
+                await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data, DateTimeOffset.MinValue).FirstAsync()));
 
                 var allData = await fixture.Get(keys).ToList().FirstAsync();
                 Assert.Equal(0, allData.Count);
@@ -891,7 +891,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 var data = new byte[] { 0x10, 0x20, 0x30, };
                 var keys = new[] { "Foo", "Bar", "Baz", };
 
-                await fixture.Insert(keys.ToDictionary(k => k, v => data)).FirstAsync();
+                await fixture.Insert(keys.ToDictionary(k => k, _ => data)).FirstAsync();
 
                 Assert.Equal(keys.Length, (await fixture.GetAllKeys().FirstAsync()).Length);
 
@@ -915,7 +915,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 var data = new byte[] { 0x10, 0x20, 0x30, };
                 var keys = new[] { "Foo", "Bar", "Baz", };
 
-                await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync())).ConfigureAwait(false);
+                await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync()));
 
                 Assert.Equal(keys.Length, (await fixture.GetAllKeys().ToList().FirstAsync()).Count);
 
@@ -935,19 +935,19 @@ namespace ReactiveMarbles.CacheDatabase.Tests
             using (Utility.WithEmptyDirectory(out var path))
             await using (var fixture = CreateBlobCache(path))
             {
-                await fixture.Insert("Foo", new byte[] { 1, 2, 3 });
-                await fixture.Insert("Bar", new byte[] { 4, 5, 6 });
+                await fixture.Insert("Foo", [1, 2, 3]);
+                await fixture.Insert("Bar", [4, 5, 6]);
 
-                await Assert.ThrowsAsync<NotNullConstraintViolationException>(async () => await fixture.Insert(null, new byte[] { 7, 8, 9 }).FirstAsync()).ConfigureAwait(false);
+                await Assert.ThrowsAsync<NotNullConstraintViolationException>(async () => await fixture.Insert(null, [7, 8, 9]).FirstAsync());
 
                 var output1 = await fixture.Get("Foo");
                 var output2 = await fixture.Get("Bar");
 
                 await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                    await fixture.Get((string)null).FirstAsync()).ConfigureAwait(false);
+                    await fixture.Get((string)null).FirstAsync());
 
                 await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-                    await fixture.Get("Baz").FirstAsync()).ConfigureAwait(false);
+                    await fixture.Get("Baz").FirstAsync());
 
                 Assert.Equal(3, output1.Length);
                 Assert.Equal(3, output2.Length);
@@ -969,7 +969,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 var fixture = CreateBlobCache(path);
                 await using (fixture)
                 {
-                    await fixture.Insert("Foo", new byte[] { 1, 2, 3 });
+                    await fixture.Insert("Foo", [1, 2, 3]);
                 }
 
                 fixture.Dispose();
@@ -995,7 +995,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 DateTimeOffset roughCreationTime;
                 await using (fixture)
                 {
-                    fixture.Insert("Foo", new byte[] { 1, 2, 3 }).Wait();
+                    fixture.Insert("Foo", [1, 2, 3]).Wait();
                     roughCreationTime = fixture.Scheduler.Now;
                 }
 
@@ -1023,13 +1023,13 @@ namespace ReactiveMarbles.CacheDatabase.Tests
             using (Utility.WithEmptyDirectory(out var path))
             await using (var fixture = CreateBlobCache(path))
             {
-                fixture.Insert("Foo", new byte[] { 1, 2, 3 }).Wait();
+                fixture.Insert("Foo", [1, 2, 3]).Wait();
 
                 var output = await fixture.Get("Foo").FirstAsync();
                 Assert.Equal(3, output.Length);
                 Assert.Equal(1, output[0]);
 
-                fixture.Insert("Foo", new byte[] { 4, 5 }).Wait();
+                fixture.Insert("Foo", [4, 5]).Wait();
 
                 output = await fixture.Get("Foo").FirstAsync();
                 Assert.Equal(2, output.Length);
@@ -1050,8 +1050,8 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 {
                     await using (var fixture = CreateBlobCache(path))
                     {
-                        await fixture.Insert("foo", new byte[] { 1, 2, 3 }, TimeSpan.FromMilliseconds(100));
-                        await fixture.Insert("bar", new byte[] { 4, 5, 6 }, TimeSpan.FromMilliseconds(500));
+                        await fixture.Insert("foo", [1, 2, 3], TimeSpan.FromMilliseconds(100));
+                        await fixture.Insert("bar", [4, 5, 6], TimeSpan.FromMilliseconds(500));
 
                         byte[] result = null;
                         sched.AdvanceToMs(20);
@@ -1066,7 +1066,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                         sched.AdvanceToMs(120);
                         fixture.Get("foo").Subscribe(
                             x => result = x,
-                            ex => shouldFail = false);
+                            _ => shouldFail = false);
                         fixture.Get("bar").Subscribe(x => result = x);
 
                         sched.AdvanceToMs(300);
@@ -1092,14 +1092,14 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                         sched.AdvanceToMs(1000);
                         fixture.Get("bar").Subscribe(
                             x => result = x,
-                            ex => shouldFail = false);
+                            _ => shouldFail = false);
 
                         sched.AdvanceToMs(1010);
                         Assert.False(shouldFail);
                     }
 
                     sched.Start();
-                }).ConfigureAwait(false);
+                });
             }
         }
 
@@ -1114,9 +1114,9 @@ namespace ReactiveMarbles.CacheDatabase.Tests
             {
                 await using (var fixture = CreateBlobCache(path))
                 {
-                    await fixture.Insert("Foo", new byte[] { 1, 2, 3 }).FirstAsync();
-                    await fixture.Insert("Bar", new byte[] { 4, 5, 6 }).FirstAsync();
-                    await fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).FirstAsync();
+                    await fixture.Insert("Foo", [1, 2, 3]).FirstAsync();
+                    await fixture.Insert("Bar", [4, 5, 6]).FirstAsync();
+                    await fixture.Insert("Bamf", [7, 8, 9]).FirstAsync();
 
                     Assert.NotEqual(0, (await fixture.GetAllKeys().ToList().FirstAsync()).Count);
 
@@ -1145,9 +1145,9 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 {
                     var inThePast = CoreRegistrations.TaskpoolScheduler.Now - TimeSpan.FromDays(1.0);
 
-                    await fixture.Insert("Foo", new byte[] { 1, 2, 3 }, inThePast).FirstAsync();
-                    await fixture.Insert("Bar", new byte[] { 4, 5, 6 }, inThePast).FirstAsync();
-                    await fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).FirstAsync();
+                    await fixture.Insert("Foo", [1, 2, 3], inThePast).FirstAsync();
+                    await fixture.Insert("Bar", [4, 5, 6], inThePast).FirstAsync();
+                    await fixture.Insert("Bamf", [7, 8, 9]).FirstAsync();
 
                     var keys = await fixture.GetAllKeys().ToList().FirstAsync();
                     Assert.Equal(1, keys.Count);
@@ -1174,10 +1174,10 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                     var inThePast = CoreRegistrations.TaskpoolScheduler.Now - TimeSpan.FromDays(1.0);
                     var inTheFuture = CoreRegistrations.TaskpoolScheduler.Now + TimeSpan.FromDays(1.0);
 
-                    await fixture.Insert("Foo", new byte[] { 1, 2, 3 }, inThePast).FirstAsync();
-                    await fixture.Insert("Bar", new byte[] { 4, 5, 6 }, inThePast).FirstAsync();
-                    await fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).FirstAsync();
-                    await fixture.Insert("Baz", new byte[] { 7, 8, 9 }, inTheFuture).FirstAsync();
+                    await fixture.Insert("Foo", [1, 2, 3], inThePast).FirstAsync();
+                    await fixture.Insert("Bar", [4, 5, 6], inThePast).FirstAsync();
+                    await fixture.Insert("Bamf", [7, 8, 9]).FirstAsync();
+                    await fixture.Insert("Baz", [7, 8, 9], inTheFuture).FirstAsync();
 
                     try
                     {
@@ -1212,10 +1212,10 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                 var inThePast = CoreRegistrations.TaskpoolScheduler.Now - TimeSpan.FromDays(1.0);
                 var inTheFuture = CoreRegistrations.TaskpoolScheduler.Now + TimeSpan.FromDays(1.0);
 
-                await fixture.Insert("Foo", new byte[] { 1, 2, 3 }, inThePast).FirstAsync();
-                await fixture.Insert("Bar", new byte[] { 4, 5, 6 }, inThePast).FirstAsync();
-                await fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).FirstAsync();
-                await fixture.Insert("Baz", new byte[] { 7, 8, 9 }, inTheFuture).FirstAsync();
+                await fixture.Insert("Foo", [1, 2, 3], inThePast).FirstAsync();
+                await fixture.Insert("Bar", [4, 5, 6], inThePast).FirstAsync();
+                await fixture.Insert("Bamf", [7, 8, 9]).FirstAsync();
+                await fixture.Insert("Baz", [7, 8, 9], inTheFuture).FirstAsync();
 
                 try
                 {
@@ -1227,8 +1227,8 @@ namespace ReactiveMarbles.CacheDatabase.Tests
                     // just make the test pass
                 }
 
-                await Assert.ThrowsAsync<KeyNotFoundException>(() => fixture.Get("Foo").FirstAsync().ToTask()).ConfigureAwait(false);
-                await Assert.ThrowsAsync<KeyNotFoundException>(() => fixture.Get("Bar").FirstAsync().ToTask()).ConfigureAwait(false);
+                await Assert.ThrowsAsync<KeyNotFoundException>(() => fixture.Get("Foo").FirstAsync().ToTask());
+                await Assert.ThrowsAsync<KeyNotFoundException>(() => fixture.Get("Bar").FirstAsync().ToTask());
             }
         }
 

@@ -50,7 +50,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
-    <PackageReference Include="ReactiveUI.Testing" Version="19.5.41" />
+    <PackageReference Include="ReactiveUI.Testing" Version="19.6.12" />
   </ItemGroup>
 
    <PropertyGroup>
